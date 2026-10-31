@@ -15,6 +15,7 @@ SEND_KEY_LIST = os.getenv('SEND_KEY_LIST', '')
 url = 'https://m.jlc.com/api/activity/sign/signIn?source=3'
 gold_bean_url = "https://m.jlc.com/api/appPlatform/center/assets/selectPersonalAssetsInfo"
 seventh_day_url = "https://m.jlc.com/api/activity/sign/receiveVoucher"
+sign_status_url = "https://m.jlc.com/api/activity/sign/getCurrentUserSignInConfig"
 
 
 # ======== 工具函数 ========
@@ -73,6 +74,20 @@ def sign_in(access_token, retries=3, backoff=10):
 
     for attempt in range(1, retries + 1):
         try:
+            # GitHub Actions 的每次运行相互独立，从嘉立创查询每个账号的当天状态。
+            status_response = requests.get(sign_status_url, headers=headers, timeout=15)
+            status_response.raise_for_status()
+            status_result = status_response.json()
+            status_data = status_result.get('data') if isinstance(status_result, dict) else None
+            if (not isinstance(status_result, dict) or status_result.get('success') is not True
+                    or not isinstance(status_data, dict)
+                    or not isinstance(status_data.get('haveSignIn'), bool)):
+                print("⚠️ 无法确认今日签到状态，本次跳过，下次定时运行再试")
+                return None
+            if status_data['haveSignIn']:
+                print("ℹ️ 今日已签到，跳过签到请求")
+                return None
+
             # 1. 获取金豆信息（先获取，用于获取 customer_code）
             bean_response = requests.get(gold_bean_url, headers=headers, timeout=15)
             bean_response.raise_for_status()
