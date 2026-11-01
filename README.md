@@ -67,14 +67,14 @@ SEND_KEY_LIST这样填：your_key1,your_key2
 
 ## ⏱️ GitHub Actions 定时运行
 
-### 创建 `.github/workflows/jlc-signin.yml`
+### 配置 `.github/workflows/python-publish.yml`
 
 ```yaml
 name: JLC Auto Sign
 
 on:
   schedule:
-    - cron: '0 16,22,4,10 * * *'  # 每 6 小时执行一次，UTC + 8 北京时间
+    - cron: '17 0,4,10 * * *'  # 北京时间 08:17、12:17、18:17
 
   workflow_dispatch:
 
